@@ -1,0 +1,4 @@
+﻿  Source.cpp
+c:\users\mcaba\source\repos\project3\project3\source.cpp(30): warning C4326: return type of 'main' should be 'int' instead of 'void'
+c:\users\mcaba\source\repos\project3\project3\source.cpp(44): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+  Project3.vcxproj -> C:\Users\mcaba\source\repos\Project3\Debug\Project3.exe
