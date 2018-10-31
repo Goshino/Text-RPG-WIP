@@ -12,11 +12,11 @@ bool running = true; //Game state
 int cmd; //User input
 
 int roomTrack = 0; //Tracks the amount of rooms that the player has entered with each dungeon floor
-				   //Reason for this is so that the player does not automatically encounter a boss, scales with player level
+//Reason for this is so that the player does not automatically encounter a boss, scales with player level
 static string pName; //Player name
-int pLevel; //Player level
-int pExp; //Player current exp
-int pExpUp; //Exp that is required to level up to the next level, assuming player has 0 exp
+int pLevel = 1; //Player level
+int pExp = 0; //Player current exp
+int pExpUp = 0; //Exp that is required to level up to the next level, assuming player has 0 exp
 
 int toughness; //Skillpoint based around armor
 int vitality; //Skillpoint based around health
@@ -24,8 +24,8 @@ int strength; //Skillpoint based around attack
 int dexterity; //Skillpoint based around Crit chance
 int agility; //Skillpoint based around dodge chance
 
-int pHp; //Player hp, this is different from max exp as the player is expected to get damaged
 int pHpMax; //Player max hp
+int pHp = pHpMax; //Player hp, this is different from max exp as the player is expected to get damaged
 int pAtk; //Player damage
 double pCritChance; //Chance for the player to hit a crit; doubles the amount of damage dealt to the mob
 double pDodgeChance; //Cahnce for the player to dodge an attack; enemy attack is completely nullified
@@ -45,9 +45,11 @@ void beginningMenu();
 void bossEncounter();
 void dungeonDepth();
 void characterInitialize();
-void confirmCharacter();
+void confirmCharacter(int n, int arr[], int size);
 void enemyStats();
 void playerStats();
+void updateStats(int& level);
+int expNext(int plevel);
 
 //Main
 void main() {
@@ -102,6 +104,7 @@ void beginningAdventure() {
 		"You stand in front of the entrance to the dungeon..." << endl <<
 		"You want to go inside...\n" << endl;
 	cout << "[1] Enter Dungeon" << endl <<
+		"[2] View Stats" << endl <<
 		"[0] Exit Game\n" << endl <<
 		"====================================================\n" << endl <<
 		"Input value of your decision:" << endl;
@@ -113,6 +116,13 @@ void beginningAdventure() {
 	{
 	case 1:
 		randomEncounter();
+		break;
+	case 2:
+		updateStats(pLevel);
+		playerStats();
+		system("pause");
+		system("cls");
+		beginningAdventure();
 		break;
 	case 0:
 		running = false;
@@ -133,6 +143,12 @@ void beginningMenu() {
 
 	switch (cmd) {
 	case 1:
+		cout << "=============================\n" << endl <<
+			"What is your name adventurer?\n " << endl <<
+			"=============================\n" << endl <<
+			"Your name:" << endl;
+
+		cin >> pName;
 		characterInitialize();
 		beginningAdventure();
 		break;
@@ -158,16 +174,11 @@ void shopEncounter() {
 void characterInitialize() {
 	int characterTypeHP[] = { 15, 10, 20 };
 	int characterTypeAtk[] = { 5, 20, 10 };
-	cout << "=============================\n" << endl <<
-		"What is your name adventurer?\n " << endl <<
-		"=============================\n" << endl <<
-		"Your name:" << endl;
 
-	cin >> pName;
 	system("cls");
 	do {
 		cout << "============================\n" << endl <<
-			pName <<"... you are...\n" << endl <<
+			pName << "... you are...\n" << endl <<
 			"[1] a human..." << endl <<
 			"[2] an elf..." << endl <<
 			"[3] an orc...\n" << endl <<
@@ -181,58 +192,75 @@ void characterInitialize() {
 		{
 		case 1: //Human player
 			cout << "===============================\n" << endl;
-			cout << "Humans have a base health of 15\n" << endl;
+			cout << "Humans have a base health of " << characterTypeHP[cmd - 1] << endl << endl;
 			cout << "===============================\n" << endl;
 			system("pause");
 			system("cls");
-			confirmCharacter();
+			confirmCharacter(cmd, characterTypeHP, 3);
 			break;
 		case 2: //Elf player
 			cout << "==============================\n" << endl;
-			cout << "Elves have a base health of 10\n" << endl;
+			cout << "Elves have a base health of " << characterTypeHP[cmd - 1] << endl << endl;
 			cout << "==============================\n" << endl;
 			system("pause");
 			system("cls");
-			confirmCharacter();
+			confirmCharacter(cmd, characterTypeHP, 3);
 			break;
 		case 3: //Orc player
 			cout << "=============================\n" << endl;
-			cout << "Orcs have a base health of 20\n" << endl;
+			cout << "Orcs have a base health of " << characterTypeHP[cmd - 1] << endl << endl;
 			cout << "=============================\n" << endl;
 			system("pause");
 			system("cls");
-			confirmCharacter();
+			confirmCharacter(cmd, characterTypeHP, 3);
 			break;
 		}
 	} while (!characterConfirm);
 }
 
 
-void confirmCharacter() {
+void confirmCharacter(int n, int arr[], int size) {
 	char ch;
-	cout << "===================\n" << endl <<
-		"Are you sure? (Y/N)\n" << endl <<
-		"===================\n" << endl <<
-		"Input value of your decision:" << endl;
-	cin >> ch;
-	ch == 'y' || ch == 'Y' ? characterConfirm = true : characterConfirm = false;
+	do {
+		cout << "=============================\n" << endl <<
+			"Are you sure? (Y/N)\n" << endl <<
+			"=============================\n" << endl <<
+			"Input value of your decision:" << endl;
+		cin >> ch;
+		ch == 'y' || ch == 'Y' ? characterConfirm = true : characterConfirm = false;
+		if (!characterConfirm) {
+			characterInitialize();
+		}
+		else {
+			pHpMax = pHp = arr[n];
+		}
+	} while (!characterConfirm);
 
 	system("cls");
-
 
 }
 
 void playerStats() {
-	cout << "Character Sheet" << endl;
+	cout << "======Character Sheet=====\n" << endl;
 	cout << "Name: " << pName << endl;
-	cout << "Level: " << pExp << endl;
-	cout << "Exp to level up: " << pExpUp - pExp << endl << endl;
+	cout << "Level: " << pLevel << endl;
+	cout << "Exp to level up: " << (int)((4 * pow(pLevel, 3) / 5) + 0.5) << endl << endl;
 	cout << "HP: " << pHp << '/' << pHpMax << endl;
-	cout << "Attack: " << pAtk << endl; 
+	cout << "Attack: " << pAtk << endl;
 	cout << "Armor: " << pArmr << endl;
-	cout << "Damage Res: " << pDmgRes << '%' << endl;
+	cout << "Damage Res: " << pDmgRes << '%' << endl << endl;
+	cout << "==========================" << endl;
 }
 
 void enemyStats() {
 
+}
+
+void updateStats(int& level) {
+	double nextExp = 4 * pow(level, 3) / 5;
+	while (pExp > nextExp) {
+		level++;
+		pExp -= nextExp + 0.5;
+		pExpUp = nextExp + 0.5;
+	}
 }
