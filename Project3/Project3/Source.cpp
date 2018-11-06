@@ -45,11 +45,14 @@ void beginningMenu();
 void bossEncounter();
 void dungeonDepth();
 void characterInitialize();
-void confirmCharacter(int n, int arr[], int size);
+void confirmCharacter(int n, int arr[]);
 void enemyStats();
 void playerStats();
 void updateStats(int& level);
 int expNext(int plevel);
+int rnd(double n);
+int expUpAlg(int level);
+
 
 //Main
 void main() {
@@ -172,8 +175,7 @@ void shopEncounter() {
 }
 
 void characterInitialize() {
-	int characterTypeHP[] = { 15, 10, 20 };
-	int characterTypeAtk[] = { 5, 20, 10 };
+	int characterTypeHP[] = { 15, 10, 20 }; //Array for three archtypes of characters
 
 	system("cls");
 	do {
@@ -196,7 +198,7 @@ void characterInitialize() {
 			cout << "===============================\n" << endl;
 			system("pause");
 			system("cls");
-			confirmCharacter(cmd, characterTypeHP, 3);
+			confirmCharacter(cmd - 1, characterTypeHP);
 			break;
 		case 2: //Elf player
 			cout << "==============================\n" << endl;
@@ -204,7 +206,7 @@ void characterInitialize() {
 			cout << "==============================\n" << endl;
 			system("pause");
 			system("cls");
-			confirmCharacter(cmd, characterTypeHP, 3);
+			confirmCharacter(cmd - 1, characterTypeHP);
 			break;
 		case 3: //Orc player
 			cout << "=============================\n" << endl;
@@ -212,14 +214,14 @@ void characterInitialize() {
 			cout << "=============================\n" << endl;
 			system("pause");
 			system("cls");
-			confirmCharacter(cmd, characterTypeHP, 3);
+			confirmCharacter(cmd - 1, characterTypeHP);
 			break;
 		}
 	} while (!characterConfirm);
 }
 
 
-void confirmCharacter(int n, int arr[], int size) {
+void confirmCharacter(int n, int arr[]) {
 	char ch;
 	do {
 		cout << "=============================\n" << endl <<
@@ -244,7 +246,7 @@ void playerStats() {
 	cout << "======Character Sheet=====\n" << endl;
 	cout << "Name: " << pName << endl;
 	cout << "Level: " << pLevel << endl;
-	cout << "Exp to level up: " << (int)((4 * pow(pLevel, 3) / 5) + 0.5) << endl << endl;
+	cout << "Exp to level up: " << expUpAlg(pLevel) << endl << endl;
 	cout << "HP: " << pHp << '/' << pHpMax << endl;
 	cout << "Attack: " << pAtk << endl;
 	cout << "Armor: " << pArmr << endl;
@@ -252,15 +254,22 @@ void playerStats() {
 	cout << "==========================" << endl;
 }
 
-void enemyStats() {
+void enemyStats() { //Enemy stats
 
 }
 
-void updateStats(int& level) {
-	double nextExp = 4 * pow(level, 3) / 5;
-	while (pExp > nextExp) {
+void updateStats(int& level) { //Function that updates the player stats, called whenever the player wants to view stats or finishes a room
+	while (pExp > pExpUp) {
 		level++;
-		pExp -= nextExp + 0.5;
-		pExpUp = nextExp + 0.5;
+		pExp -= expUpAlg(level);
+		pExpUp = expUpAlg(level);
 	}
+}
+
+int rnd(double n) {  //Simple round function with integer double addition
+	return n + 0.5;
+}
+
+int expUpAlg(int level) { //Function definition of expUpAlg,used to compute how much exp is required to hit the next level assuming exp isat 0
+	return rnd(4 * pow(level, 3) / 5);
 }
