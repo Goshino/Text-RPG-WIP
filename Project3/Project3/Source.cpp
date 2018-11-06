@@ -37,13 +37,13 @@ bool characterConfirm = false;
 
 
 //Prototyping functions, so there won't be chronological conflict
-void mobEncounter();
-void randomEncounter();
-void shopEncounter();
+void mobEncounter(); //Player encounters a random mob of a random archtype from: goblins, satyr, giants
+void randomEncounter(); //Function that forces a random encounter whenever the player enters a room: shopkeeper, rest, mob, boss, dungeon level
+void shopEncounter(); //
 void beginningAdventure();
 void beginningMenu();
 void bossEncounter();
-void dungeonDepth();
+void dungeonProgress(); //Function where the player progresses further into the dungeon level wise
 void characterInitialize();
 void confirmCharacter(int n, int arr[]);
 void enemyStats();
@@ -96,7 +96,7 @@ void randomEncounter() {
 		mobEncounter();
 		break;
 	case 4:
-		dungeonDepth();
+		dungeonProgress();
 		roomTrack = 0;
 		break;
 	}
@@ -166,7 +166,7 @@ void bossEncounter() {
 
 }
 
-void dungeonDepth() {
+void dungeonProgress() {
 
 }
 
@@ -242,7 +242,7 @@ void confirmCharacter(int n, int arr[]) {
 
 }
 
-void playerStats() {
+void playerStats() { //Function that prints all of the character information, used when player wants to view stats
 	cout << "======Character Sheet=====\n" << endl;
 	cout << "Name: " << pName << endl;
 	cout << "Level: " << pLevel << endl;
