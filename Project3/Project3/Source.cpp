@@ -7,6 +7,23 @@
 
 using namespace std;
 
+struct Enemy {
+	string e_name; 
+
+	int e_level;
+	int e_hpMax;
+	int e_hp;
+
+	int e_atk;
+	int e_favoriteAtk; //0 for block, 1 for normal, 2 for heavy
+	double e_atkSpd; //0.5 for slow, 1 for normal, 2 for fast
+	int e_armr;
+
+	double e_critChance;
+	double e_dodgeChance;
+	int e_expDrop;
+};
+
 //Public variables for input and game state
 bool running = true; //Game state
 bool runChoice = true;
@@ -29,7 +46,7 @@ int agility = 0; //Skillpoint based around dodge chance
 int p_hpMax = 0; //Player max hp
 int p_hp = 0; //Player hp, this is different from max exp as the player is expected to get damaged
 int p_atk = 0; //Player damage
-double p_atkSpd = 0;
+int p_atkSpd = 0;
 double p_critChance = 0; //Chance for the player to hit a crit; doubles the amount of damage dealt to the mob
 double p_dodgeChance = 0; //Cahnce for the player to dodge an attack; enemy attack is completely nullified
 int p_armr = 0; //Player's armor stat, used to dedtermine the player's damage resistance
@@ -40,8 +57,8 @@ int roomTrack = 0; //Tracks the amount of rooms that the player has entered with
 
 
 //Prototyping functions, so there won't be chronological conflict
-void enemyCreate(int type);
-int mobEncounter(); //Player encounters a random mob of a random archtype from: goblins, slime, golems
+Enemy enemyCreate(); //Enemy struct that randomly generates an enemy
+void combat();
 void randomEncounter(); //Function that forces a random encounter whenever the player enters a room: shopkeeper, rest, mob, boss, dungeon level
 void shopEncounter(); //Generates a shop for the player
 void bossEncounter(); //Spawns boss
@@ -65,21 +82,6 @@ int rand_int(int low, int high); //Function that easily translates the rand % x 
 
 void tryAgain();
 
-struct Enemy {
-	int e_level;
-	int e_hpMax;
-	int e_hp;
-
-	int e_atk;
-	int e_favoriteAtk; //0 for block, 1 for normal, 2 for heavy
-	double e_atkSpd; //0.5 for slow, 1 for normal, 2 for fast
-	int e_armr;
-
-	double e_critChance;
-	double e_dodgeChance;
-	int e_expDrop;
-};
-
 struct Inventory {
 	int min;
 	int max;
@@ -94,46 +96,49 @@ void main() {
 			tryAgain();
 		}
 	} while (running && runChoice);
+
+	/*
+	for (size_t i = 0; i < 100; i++) {
+		Enemy temp = enemyCreate();
+		cout << temp.e_name << endl;
+		cout << temp.e_hp << '/' << temp.e_hpMax << endl;
+		cout << temp.e_atk << endl;
+		cout << endl;
+	}
+	*/
 }
 
 
 
 //Definitions
-int mobEncounter() { //This function randomly generates what mob that the player will encounter, this returns a number in which decides the scaling for everything
-	srand(time(NULL));
-	int encounterMob = rand() % 3; //Three is the amount of different archtype of mobs there are in the game
-	switch (encounterMob) {
-	case 0: //Encounters a mob that specializes in normal attacks (goblins)
-		return 0;
-		break;
-	case 1: //Encounters a mob that specializes in heavy attacks (golem)
-		return 1;
-		break;
-	case 2: //Encounters a mob that specializes in blocking or avoiding damage (slimes)
-		return 2;
-		break;
-	}
-}
-
-void enemyCreate(int type) {
+Enemy enemyCreate() {
+	int type = rand_int(0, 2);
 	Enemy temp;
 	temp.e_level = p_level;
 	switch (type) {
 	case 0: //Goblins
-		temp.e_hp = temp.e_hpMax = rand_int(10 * temp.e_level, 20 * temp.e_level);
-		temp.e_atk = rand_int(2 * temp.e_level, 5 * temp.e_level);
+		temp.e_name = "Goblin";
+		temp.e_hp = temp.e_hpMax = rand_int(5 * temp.e_level, 10 * temp.e_level);
+		temp.e_atk = rand_int(1 * temp.e_level, 5 * temp.e_level);
 		temp.e_favoriteAtk = 1; //Normal attack
 		temp.e_atkSpd = 2; //Fast attack speed
 		break;
 	case 1: //Golems
+		temp.e_name = "Golem";
+		temp.e_hp = temp.e_hpMax = rand_int(15 * temp.e_level, 20 * temp.e_level);
+		temp.e_atk = rand_int(10 * temp.e_level, 15 * temp.e_level);
 		temp.e_favoriteAtk = 2;
 		temp.e_atkSpd = 0.5;
 		break;
 	case 2: //Slimes
+		temp.e_name = "Slimes";
+		temp.e_hp = temp.e_hpMax = rand_int(10 * temp.e_level, 15 * temp.e_level);
+		temp.e_atk = rand_int(5 * temp.e_level, 10 * temp.e_level);
 		temp.e_favoriteAtk = 0;
 		temp.e_atkSpd = 1;
 		break;
 	}
+	return temp; 
 }
 
 void randomEncounter() { //This function creates an encounter randomly for the game
@@ -150,7 +155,7 @@ void randomEncounter() { //This function creates an encounter randomly for the g
 			break;
 		}
 	case 2: //Player encounters a mob, handled by the function mobEncounter
-		mobEncounter();
+		combat();
 		break;
 	case 3: //Player goes deeper into the dungeon, floor level wise
 		dungeonProgress();
@@ -217,6 +222,16 @@ void beginningMenu() { //beginingMenu function allows the user to begin his or h
 	}
 }
 
+void combat() {
+	Enemy temp = enemyCreate();
+	cout << "You have encountered an enemy!" << endl;
+
+	system("pause");
+	system("cls");
+
+	cout << "Combat" << endl;
+}
+
 void bossEncounter() {
 
 }
@@ -265,10 +280,10 @@ void characterInitialize() {
 		switch (cmd)
 		{
 		case 1: //Human player
-			cout << "=========================================================\n" << endl;
+			cout << "==========================================================\n" << endl;
 			cout << "Humans have a base health of " << characterTypeHP[cmd - 1] << "..." << endl;
-			cout << "They use basic attacks and have an attack at a speed of " << 1 << endl << endl;
-			cout << "=========================================================\n" << endl;
+			cout << "They use normal attacks and have an attack at a speed of " << 1 << endl << endl;
+			cout << "==========================================================\n" << endl;
 			system("pause");
 			system("cls");
 			confirmCharacter(cmd - 1, characterSpecies, characterTypeHP, characterAtkSpd);
