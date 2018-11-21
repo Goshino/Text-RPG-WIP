@@ -9,100 +9,125 @@ using namespace std;
 
 //Public variables for input and game state
 bool running = true; //Game state
+bool firstRun = true; 
 int cmd; //User input
 
 int roomTrack = 0; //Tracks the amount of rooms that the player has entered with each dungeon floor
 //Reason for this is so that the player does not automatically encounter a boss, scales with player level
 static string pName; //Player name
-int pLevel = 1; //Player level
-int pExp = 0; //Player current exp
-int pExpUp = 0; //Exp that is required to level up to the next level, assuming player has 0 exp
+static string species; //Player species, option given in the game
+int p_level = 1; //Player level
+int p_exp = 0; //Player current exp
+int p_expUp = 0; //Exp that is required to level up to the next level, assuming player has 0 exp
 
-int toughness; //Skillpoint based around armor
-int vitality; //Skillpoint based around health
-int strength; //Skillpoint based around attack
-int dexterity; //Skillpoint based around Crit chance
-int agility; //Skillpoint based around dodge chance
+int toughness = 0; //Skillpoint based around armor
+int vitality = 0; //Skillpoint based around health
+int strength = 0; //Skillpoint based around attack
+int dexterity = 0; //Skillpoint based around Crit chance
+int agility = 0; //Skillpoint based around dodge chance
 
-int pHpMax; //Player max hp
-int pHp = pHpMax; //Player hp, this is different from max exp as the player is expected to get damaged
-int pAtk; //Player damage
-double pCritChance; //Chance for the player to hit a crit; doubles the amount of damage dealt to the mob
-double pDodgeChance; //Cahnce for the player to dodge an attack; enemy attack is completely nullified
-int pArmr; //Player's armor stat, used to dedtermine the player's damage resistance
-double pDmgRes; //Damage resistance, the amount of damage that is blocked from an attack, x% effective due to the player's armor
+int p_hpMax = 0; //Player max hp
+int p_hp = 0; //Player hp, this is different from max exp as the player is expected to get damaged
+int p_atk = 0; //Player damage
+int p_atkSpd = 0;
+double p_critChance = 0; //Chance for the player to hit a crit; doubles the amount of damage dealt to the mob
+double p_dodgeChance = 0; //Cahnce for the player to dodge an attack; enemy attack is completely nullified
+int p_armr = 0; //Player's armor stat, used to dedtermine the player's damage resistance
+double p_dmgRes = 0;//1 - ((0.05 * pArmr) / (1 + 0.05 * pArmr))Damage resistance, the amount of damage that is blocked from an attack, x% effective due to the player's armor
 
 //Public variables for functions
 bool characterConfirm = false;
 
 
 //Prototyping functions, so there won't be chronological conflict
-void mobEncounter(); //Player encounters a random mob of a random archtype from: goblins, satyr, giants
+void enemyCreate(double scale);
+double mobEncounter(); //Player encounters a random mob of a random archtype from: goblins, slime, golems
 void randomEncounter(); //Function that forces a random encounter whenever the player enters a room: shopkeeper, rest, mob, boss, dungeon level
-void shopEncounter(); //
-void beginningAdventure();
-void beginningMenu();
-void bossEncounter();
+void shopEncounter(); //Generates a shop for the player
+void bossEncounter(); //Spawns boss
 void dungeonProgress(); //Function where the player progresses further into the dungeon level wise
-void characterInitialize();
-void confirmCharacter(int n, int arr[]);
-void enemyStats();
-void playerStats();
-void updateStats(int& level);
-int expNext(int plevel);
-int rnd(double n);
-int expUpAlg(int level);
 
+void beginningAdventure(); //Function that actually begins the adventure
+void beginningMenu(); //UI for beginning menu, prompts the rest of the game
+
+void characterInitialize(); //Function that initializes player stat variables for the start of the game
+void confirmCharacter(int n, string arr[], int arr2[], double arr3[]); //Function used in characterInitialize, used to confirm the character stats
+
+void printEnemyStats(); //Randomly generates enemy stats
+void printPlayerStats(); //Function that shows the player his or her stats 
+
+void levelUp(int& level); //Function that updates the player's stats updated after a completion of every room
+void specUp(); //Function that allows the user where he or she wants to put his or her skill 
+
+int rnd(double n); //Function for rounding
+int expUpAlg(int level); //Function that decides the amount needed to level up the player
+int rand_int(int low, int high); //Function that easily translates the rand % x algorithm into a function, not necessary but nice to have
+
+struct enemyCreate {
+	int e_Level;
+	int e_HpMax;
+	int e_Hp;
+	int e_Atk;
+	int e_Armr;
+	int e_CritChance;
+	int e_DodgeChance;
+};
 
 //Main
 void main() {
 	while (running) {
 		beginningMenu();
+		firstRun = false;
 	}
+	system("pause");
 }
 
 
 
 //Definitions
-void mobEncounter() {
+double mobEncounter() { //This function randomly generates what mob that the player will encounter, this returns a number in which decides the scaling for everything
 	srand(time(NULL));
-	int typesOfMobs = 3;
-	int encounterMob = rand() % typesOfMobs;
-	switch (encounterMob)
-	{
-	case 0: //Encounters a mob that specializes in normal attacks
+	int encounterMob = rand() % 4; //Four is the amount of different archtype of mobs there are in the game
+	switch (encounterMob) {
+	case 0: //Encounters a mob that specializes in normal attacks (goblins)
+		return 0.5; 
 		break;
-	case 1: //Encounters a mob that specializes in heavy attacks
+	case 1: //Encounters a mob that specializes in heavy attacks (golem)
+		return 2;
 		break;
-	case 2: //Encounters a mob that specializes in blocking or avoiding damage
+	case 2: //Encounters a mob that specializes in blocking or avoiding damage (slimes)
+		return 1;
 		break;
 	}
 }
 
-void randomEncounter() {
+void enemyCreate(double scale) {
+}
+
+void randomEncounter() { //This function creates an encounter randomly for the game
 	srand(time(NULL));
-	int numberOfEvents = 4;
-	int eventEncounter = rand() % numberOfEvents;
+	int numberOfEvents = 4; //The amount of significant events in the game; takes a similarity to parallelism
+	int eventEncounter = rand() % numberOfEvents; //Used in the switch statement to decide which, creates a random value from 0-3
 	switch (eventEncounter) {
-	case 0:
+	case 0: //Player encounters a shop
 		shopEncounter();
 		break;
-	case 1:
-		if (roomTrack >= pLevel * 5) {
+	case 1: //Player encounters a boss
+		if (roomTrack >= rnd(p_level * 5 / 2)) {
 			bossEncounter();
 			break;
 		}
-	case 2:
+	case 2: //Player encounters a mob, handled by the function mobEncounter
 		mobEncounter();
 		break;
-	case 4:
+	case 3: //Player goes deeper into the dungeon, floor level wise
 		dungeonProgress();
 		roomTrack = 0;
 		break;
 	}
 }
 
-void beginningAdventure() {
+void beginningAdventure() { //Function that prompts after the beginningMenu function. This transitions into 2 other functions
 	cout << "====================================================\n" << endl <<
 		"You stand in front of the entrance to the dungeon..." << endl <<
 		"You want to go inside...\n" << endl;
@@ -120,9 +145,8 @@ void beginningAdventure() {
 	case 1:
 		randomEncounter();
 		break;
-	case 2:
-		updateStats(pLevel);
-		playerStats();
+	case 2: //printPlayerStats function is called, after that, beginningAdventure function is called once more for the player to decide what to do
+		printPlayerStats();
 		system("pause");
 		system("cls");
 		beginningAdventure();
@@ -134,7 +158,7 @@ void beginningAdventure() {
 	}
 }
 
-void beginningMenu() {
+void beginningMenu() { //beginingMenu function allows the user to begin his or her adventure, prompts character initialization after name declaration
 	cout << "===Generic Text Adventure===\n" << endl;
 	cout << "[1] Begin Adventure" << endl <<
 		"[0] Exit Game\n" << endl <<
@@ -150,7 +174,6 @@ void beginningMenu() {
 			"What is your name adventurer?\n " << endl <<
 			"=============================\n" << endl <<
 			"Your name:" << endl;
-
 		cin >> pName;
 		characterInitialize();
 		beginningAdventure();
@@ -175,7 +198,9 @@ void shopEncounter() {
 }
 
 void characterInitialize() {
-	int characterTypeHP[] = { 15, 10, 20 }; //Array for three archtypes of characters
+	string characterSpecies[3] = { "Human", "Elf", "Orc" };
+	int characterTypeHP[3] = { 15, 10, 20 }; //Array for three archtypes of characters
+	double characterAtkSpd[3] = { 1, 2, 0.5 }; //Array for the three archtypes' attack speed
 
 	system("cls");
 	do {
@@ -193,35 +218,38 @@ void characterInitialize() {
 		switch (cmd)
 		{
 		case 1: //Human player
-			cout << "===============================\n" << endl;
-			cout << "Humans have a base health of " << characterTypeHP[cmd - 1] << endl << endl;
-			cout << "===============================\n" << endl;
+			cout << "==========================================================\n" << endl;
+			cout << "Humans have a base health of " << characterTypeHP[cmd - 1] << "..." << endl;
+			cout << "They use normal attacks and have an attack at a speed of " << 1 << endl << endl;
+			cout << "==========================================================\n" << endl;
 			system("pause");
 			system("cls");
-			confirmCharacter(cmd - 1, characterTypeHP);
+			confirmCharacter(cmd - 1, characterSpecies, characterTypeHP, characterAtkSpd);
 			break;
 		case 2: //Elf player
-			cout << "==============================\n" << endl;
-			cout << "Elves have a base health of " << characterTypeHP[cmd - 1] << endl << endl;
-			cout << "==============================\n" << endl;
+			cout << "========================================================\n" << endl;
+			cout << "Elves have a base health of " << characterTypeHP[cmd - 1] << "..." << endl;
+			cout << "Dancing with combat, they have an attack at a speed of " << 2 << endl << endl;
+			cout << "========================================================\n" << endl;
 			system("pause");
 			system("cls");
-			confirmCharacter(cmd - 1, characterTypeHP);
+			confirmCharacter(cmd - 1, characterSpecies, characterTypeHP, characterAtkSpd);
 			break;
 		case 3: //Orc player
-			cout << "=============================\n" << endl;
-			cout << "Orcs have a base health of " << characterTypeHP[cmd - 1] << endl << endl;
-			cout << "=============================\n" << endl;
+			cout << "=================================================\n" << endl;
+			cout << "Orcs have a base health of " << characterTypeHP[cmd - 1] << "..." << endl;
+			cout << "Using heavy attacks they attack at a speed of " << 0.5 << endl << endl;
+			cout << "=================================================\n" << endl;
 			system("pause");
 			system("cls");
-			confirmCharacter(cmd - 1, characterTypeHP);
+			confirmCharacter(cmd - 1, characterSpecies, characterTypeHP, characterAtkSpd);
 			break;
 		}
 	} while (!characterConfirm);
 }
 
 
-void confirmCharacter(int n, int arr[]) {
+void confirmCharacter(int n, string arr[], int arr2[], double arr3[] ) {
 	char ch;
 	do {
 		cout << "=============================\n" << endl <<
@@ -234,7 +262,10 @@ void confirmCharacter(int n, int arr[]) {
 			characterInitialize();
 		}
 		else {
-			pHpMax = pHp = arr[n];
+			species = arr[n];
+			p_hpMax = p_hp = arr2[n];
+			p_atk = 5; 
+			p_atkSpd = arr3[n];
 		}
 	} while (!characterConfirm);
 
@@ -242,27 +273,74 @@ void confirmCharacter(int n, int arr[]) {
 
 }
 
-void playerStats() { //Function that prints all of the character information, used when player wants to view stats
-	cout << "======Character Sheet=====\n" << endl;
+void printPlayerStats() { //Function that prints all of the character information, used when player wants to view stats
+	cout << "=================Player Stats=================\n" << endl;
 	cout << "Name: " << pName << endl;
-	cout << "Level: " << pLevel << endl;
-	cout << "Exp to level up: " << expUpAlg(pLevel) << endl << endl;
-	cout << "HP: " << pHp << '/' << pHpMax << endl;
-	cout << "Attack: " << pAtk << endl;
-	cout << "Armor: " << pArmr << endl;
-	cout << "Damage Res: " << pDmgRes << '%' << endl << endl;
-	cout << "==========================" << endl;
+	cout << "Species: " << species <<endl;
+	cout << "Level: " << p_level << endl;
+	cout << "Exp to level up: " << expUpAlg(p_level) << endl << endl;
+	cout << "HP: " << p_hp << '/' << p_hpMax << endl;
+	cout << "Attack: " << p_atk << endl;
+	cout << "Attack Speed: " << p_atkSpd << endl;
+	cout << "Armor: " << p_armr << endl << endl;
+	cout << "Damage Res: ";
+	if (p_armr == 0) {
+		cout << 0;
+	}
+	else {
+		cout << 1 - p_dmgRes;
+	}
+	cout << '%' << endl;
+	cout << "Crit Chance: " << p_critChance << '%' <<endl;
+	cout << "Dodge Chance: " << p_dodgeChance << '%' <<endl << endl;
+	cout << "Toughness (Impacts Armor): " << toughness << endl;
+	cout << "Vitality (Impacts Health): " << vitality  << endl;
+	cout << "Strength (Impacts Strength): " << strength  << endl;
+	cout << "Dexterity (Impacts Critical Chance): " << dexterity << endl;
+	cout << "Agility (Impacts Dodge Chance): " << agility << endl << endl;
+	cout << "==============================================" << endl;
 }
 
-void enemyStats() { //Enemy stats
-
+void printEnemyStats() { //Enemy stats. This function intializes enemy mob stats based on their archtype as well as scaling with the player's current level
+	cout << "Level:" << p_level << endl <<
+		"HP:";
 }
 
-void updateStats(int& level) { //Function that updates the player stats, called whenever the player wants to view stats or finishes a room
-	while (pExp > pExpUp) {
+void levelUp(int& level) { //Function that updates the player stats, called whenever the player wants to view stats or finishes a room
+	while (p_exp > p_expUp) {
 		level++;
-		pExp -= expUpAlg(level);
-		pExpUp = expUpAlg(level);
+		p_exp -= expUpAlg(level);
+		p_expUp = expUpAlg(level);
+		specUp();
+	}
+}
+
+void specUp() {
+	cout << "=====================================\n" <<
+		"Decide where to put your skill points\n" << endl <<
+		"[1] Toughness (Impacts Armor)" <<
+		"[2] Vitality (Impacts Health)" << endl <<
+		"[3] Strength (Impacts Attack)" << endl <<
+		"[4] Dexterity (Impacts Crit Chance)" << endl <<
+		"[5] Agility (Impacts Dodge Chance)\n" << endl <<
+		"Input value of your decision: " << endl;
+	switch (cmd)
+	{
+	case 1: 
+		toughness++;
+		break;
+	case 2: 
+		vitality++;
+		break;
+	case 3:
+		strength++;
+		break;
+	case 4:
+		dexterity++;
+		break;
+	case 5:
+		agility++;
+		break;
 	}
 }
 
@@ -272,4 +350,9 @@ int rnd(double n) {  //Simple round function with integer double addition
 
 int expUpAlg(int level) { //Function definition of expUpAlg,used to compute how much exp is required to hit the next level assuming exp isat 0
 	return rnd(4 * pow(level, 3) / 5);
+}
+
+int rand_int(int low, int high) {
+	int diff = high - low + 1;
+	return rand() % diff + low;
 }
