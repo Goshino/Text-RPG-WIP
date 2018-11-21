@@ -12,7 +12,6 @@ bool running = true; //Game state
 bool firstRun = true; 
 int cmd; //User input
 
-int roomTrack = 0; //Tracks the amount of rooms that the player has entered with each dungeon floor
 //Reason for this is so that the player does not automatically encounter a boss, scales with player level
 static string pName; //Player name
 static string species; //Player species, option given in the game
@@ -37,10 +36,11 @@ double p_dmgRes = 0;//1 - ((0.05 * pArmr) / (1 + 0.05 * pArmr))Damage resistance
 
 //Public variables for functions
 bool characterConfirm = false;
+int roomTrack = 0; //Tracks the amount of rooms that the player has entered with each dungeon floor
 
 
 //Prototyping functions, so there won't be chronological conflict
-void enemyCreate(double scale);
+void enemyCreate(int type);
 double mobEncounter(); //Player encounters a random mob of a random archtype from: goblins, slime, golems
 void randomEncounter(); //Function that forces a random encounter whenever the player enters a room: shopkeeper, rest, mob, boss, dungeon level
 void shopEncounter(); //Generates a shop for the player
@@ -87,21 +87,21 @@ void main() {
 //Definitions
 double mobEncounter() { //This function randomly generates what mob that the player will encounter, this returns a number in which decides the scaling for everything
 	srand(time(NULL));
-	int encounterMob = rand() % 4; //Four is the amount of different archtype of mobs there are in the game
+	int encounterMob = rand() % 3; //Three is the amount of different archtype of mobs there are in the game
 	switch (encounterMob) {
 	case 0: //Encounters a mob that specializes in normal attacks (goblins)
-		return 0.5; 
+		return 0; 
 		break;
 	case 1: //Encounters a mob that specializes in heavy attacks (golem)
-		return 2;
+		return 1;
 		break;
 	case 2: //Encounters a mob that specializes in blocking or avoiding damage (slimes)
-		return 1;
+		return 2;
 		break;
 	}
 }
 
-void enemyCreate(double scale) {
+void enemyCreate(int type) {
 }
 
 void randomEncounter() { //This function creates an encounter randomly for the game
