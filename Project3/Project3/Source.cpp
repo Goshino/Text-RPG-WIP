@@ -9,7 +9,8 @@ using namespace std;
 
 //Public variables for input and game state
 bool running = true; //Game state
-bool firstRun = true; 
+bool runChoice = true;
+bool isAlive = true; 
 int cmd; //User input
 
 //Reason for this is so that the player does not automatically encounter a boss, scales with player level
@@ -32,7 +33,6 @@ int p_atkSpd = 0;
 double p_critChance = 0; //Chance for the player to hit a crit; doubles the amount of damage dealt to the mob
 double p_dodgeChance = 0; //Cahnce for the player to dodge an attack; enemy attack is completely nullified
 int p_armr = 0; //Player's armor stat, used to dedtermine the player's damage resistance
-double p_dmgRes = 0;//1 - ((0.05 * pArmr) / (1 + 0.05 * pArmr))Damage resistance, the amount of damage that is blocked from an attack, x% effective due to the player's armor
 
 //Public variables for functions
 bool characterConfirm = false;
@@ -41,7 +41,7 @@ int roomTrack = 0; //Tracks the amount of rooms that the player has entered with
 
 //Prototyping functions, so there won't be chronological conflict
 void enemyCreate(int type);
-double mobEncounter(); //Player encounters a random mob of a random archtype from: goblins, slime, golems
+int mobEncounter(); //Player encounters a random mob of a random archtype from: goblins, slime, golems
 void randomEncounter(); //Function that forces a random encounter whenever the player enters a room: shopkeeper, rest, mob, boss, dungeon level
 void shopEncounter(); //Generates a shop for the player
 void bossEncounter(); //Spawns boss
@@ -63,34 +63,48 @@ int rnd(double n); //Function for rounding
 int expUpAlg(int level); //Function that decides the amount needed to level up the player
 int rand_int(int low, int high); //Function that easily translates the rand % x algorithm into a function, not necessary but nice to have
 
-struct enemyCreate {
-	int e_Level;
-	int e_HpMax;
-	int e_Hp;
-	int e_Atk;
-	int e_Armr;
-	int e_CritChance;
-	int e_DodgeChance;
+void tryAgain();
+
+struct Enemy {
+	int e_level;
+	int e_hpMax;
+	int e_hp;
+
+	int e_atk;
+	int e_favoriteAtk; //0 for block, 1 for normal, 2 for heavy
+	double e_atkSpd; //0.5 for slow, 1 for normal, 2 for fast
+	int e_armr;
+
+	double e_critChance;
+	double e_dodgeChance;
+	int e_expDrop;
+};
+
+struct Inventory {
+	int min;
+	int max;
+	int capacity;
 };
 
 //Main
 void main() {
-	while (running) {
+	do {
 		beginningMenu();
-		firstRun = false;
-	}
-	system("pause");
+		if (!isAlive) {
+			tryAgain();
+		}
+	} while (running && runChoice);
 }
 
 
 
 //Definitions
-double mobEncounter() { //This function randomly generates what mob that the player will encounter, this returns a number in which decides the scaling for everything
+int mobEncounter() { //This function randomly generates what mob that the player will encounter, this returns a number in which decides the scaling for everything
 	srand(time(NULL));
 	int encounterMob = rand() % 3; //Three is the amount of different archtype of mobs there are in the game
 	switch (encounterMob) {
 	case 0: //Encounters a mob that specializes in normal attacks (goblins)
-		return 0; 
+		return 0;
 		break;
 	case 1: //Encounters a mob that specializes in heavy attacks (golem)
 		return 1;
@@ -102,6 +116,24 @@ double mobEncounter() { //This function randomly generates what mob that the pla
 }
 
 void enemyCreate(int type) {
+	Enemy temp;
+	temp.e_level = p_level;
+	switch (type) {
+	case 0: //Goblins
+		temp.e_hp = temp.e_hpMax = rand_int(10 * temp.e_level, 20 * temp.e_level);
+		temp.e_atk = rand_int(2 * temp.e_level, 5 * temp.e_level);
+		temp.e_favoriteAtk = 1; //Normal attack
+		temp.e_atkSpd = 2; //Fast attack speed
+		break;
+	case 1: //Golems
+		temp.e_favoriteAtk = 2; 
+		temp.e_atkSpd = 0.5; 
+		break;
+	case 2: //Slimes
+		temp.e_favoriteAtk = 0;
+		temp.e_atkSpd = 1; 
+		break;
+	}
 }
 
 void randomEncounter() { //This function creates an encounter randomly for the game
@@ -190,7 +222,22 @@ void bossEncounter() {
 }
 
 void dungeonProgress() {
+	cout << "===========Dungeon Progress===========\n" << endl <<
+		"You descend deeper into the dungeon..." << endl <<
+		"[1] Free Level Up" << endl <<
+		"[2] Free Loot\n" << endl <<
+		"======================================" << endl;
 
+	cin >> cmd; 
+	system("cls");
+
+	switch (cmd) {
+	case 1: 
+		p_exp += expUpAlg(p_level) - p_exp;
+		break;
+	case 2: 
+		break;
+	}
 }
 
 void shopEncounter() {
@@ -227,10 +274,10 @@ void characterInitialize() {
 			confirmCharacter(cmd - 1, characterSpecies, characterTypeHP, characterAtkSpd);
 			break;
 		case 2: //Elf player
-			cout << "========================================================\n" << endl;
+			cout << "================================================\n" << endl;
 			cout << "Elves have a base health of " << characterTypeHP[cmd - 1] << "..." << endl;
-			cout << "Dancing with combat, they have an attack at a speed of " << 2 << endl << endl;
-			cout << "========================================================\n" << endl;
+			cout << "Dancing with combat, they attack at a speed of " << 2 << endl << endl;
+			cout << "================================================\n" << endl;
 			system("pause");
 			system("cls");
 			confirmCharacter(cmd - 1, characterSpecies, characterTypeHP, characterAtkSpd);
@@ -249,7 +296,7 @@ void characterInitialize() {
 }
 
 
-void confirmCharacter(int n, string arr[], int arr2[], double arr3[] ) {
+void confirmCharacter(int n, string arr[], int arr2[], double arr3[]) {
 	char ch;
 	do {
 		cout << "=============================\n" << endl <<
@@ -264,7 +311,7 @@ void confirmCharacter(int n, string arr[], int arr2[], double arr3[] ) {
 		else {
 			species = arr[n];
 			p_hpMax = p_hp = arr2[n];
-			p_atk = 5; 
+			p_atk = 5;
 			p_atkSpd = arr3[n];
 		}
 	} while (!characterConfirm);
@@ -276,26 +323,18 @@ void confirmCharacter(int n, string arr[], int arr2[], double arr3[] ) {
 void printPlayerStats() { //Function that prints all of the character information, used when player wants to view stats
 	cout << "=================Player Stats=================\n" << endl;
 	cout << "Name: " << pName << endl;
-	cout << "Species: " << species <<endl;
+	cout << "Species: " << species << endl;
 	cout << "Level: " << p_level << endl;
 	cout << "Exp to level up: " << expUpAlg(p_level) << endl << endl;
 	cout << "HP: " << p_hp << '/' << p_hpMax << endl;
 	cout << "Attack: " << p_atk << endl;
 	cout << "Attack Speed: " << p_atkSpd << endl;
 	cout << "Armor: " << p_armr << endl << endl;
-	cout << "Damage Res: ";
-	if (p_armr == 0) {
-		cout << 0;
-	}
-	else {
-		cout << 1 - p_dmgRes;
-	}
-	cout << '%' << endl;
-	cout << "Crit Chance: " << p_critChance << '%' <<endl;
-	cout << "Dodge Chance: " << p_dodgeChance << '%' <<endl << endl;
+	cout << "Crit Chance: " << p_critChance << '%' << endl;
+	cout << "Dodge Chance: " << p_dodgeChance << '%' << endl << endl;
 	cout << "Toughness (Impacts Armor): " << toughness << endl;
-	cout << "Vitality (Impacts Health): " << vitality  << endl;
-	cout << "Strength (Impacts Strength): " << strength  << endl;
+	cout << "Vitality (Impacts Health): " << vitality << endl;
+	cout << "Strength (Impacts Strength): " << strength << endl;
 	cout << "Dexterity (Impacts Critical Chance): " << dexterity << endl;
 	cout << "Agility (Impacts Dodge Chance): " << agility << endl << endl;
 	cout << "==============================================" << endl;
@@ -324,12 +363,16 @@ void specUp() {
 		"[4] Dexterity (Impacts Crit Chance)" << endl <<
 		"[5] Agility (Impacts Dodge Chance)\n" << endl <<
 		"Input value of your decision: " << endl;
+
+	cin >> cmd; 
+	system("cls");
+
 	switch (cmd)
 	{
-	case 1: 
+	case 1:
 		toughness++;
 		break;
-	case 2: 
+	case 2:
 		vitality++;
 		break;
 	case 3:
@@ -342,6 +385,19 @@ void specUp() {
 		agility++;
 		break;
 	}
+}
+
+void tryAgain() {
+	char ch; 
+	cout << "==========Game Over==========\n" << endl <<
+		"Would you like to try again? (Y/N)\n" << endl <<
+		"=============================\n" << endl <<
+		"Input value of your decision: " << endl;
+
+	cin >> ch;
+	system("cls");
+
+	((ch == 'Y') || (ch == 'y')) ? runChoice = true : runChoice = false; 
 }
 
 int rnd(double n) {  //Simple round function with integer double addition
