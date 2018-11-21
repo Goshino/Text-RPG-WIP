@@ -10,7 +10,7 @@ using namespace std;
 //Public variables for input and game state
 bool running = true; //Game state
 bool runChoice = true;
-bool isAlive = true; 
+bool isAlive = true;
 int cmd; //User input
 
 //Reason for this is so that the player does not automatically encounter a boss, scales with player level
@@ -29,7 +29,7 @@ int agility = 0; //Skillpoint based around dodge chance
 int p_hpMax = 0; //Player max hp
 int p_hp = 0; //Player hp, this is different from max exp as the player is expected to get damaged
 int p_atk = 0; //Player damage
-int p_atkSpd = 0;
+double p_atkSpd = 0;
 double p_critChance = 0; //Chance for the player to hit a crit; doubles the amount of damage dealt to the mob
 double p_dodgeChance = 0; //Cahnce for the player to dodge an attack; enemy attack is completely nullified
 int p_armr = 0; //Player's armor stat, used to dedtermine the player's damage resistance
@@ -126,12 +126,12 @@ void enemyCreate(int type) {
 		temp.e_atkSpd = 2; //Fast attack speed
 		break;
 	case 1: //Golems
-		temp.e_favoriteAtk = 2; 
-		temp.e_atkSpd = 0.5; 
+		temp.e_favoriteAtk = 2;
+		temp.e_atkSpd = 0.5;
 		break;
 	case 2: //Slimes
 		temp.e_favoriteAtk = 0;
-		temp.e_atkSpd = 1; 
+		temp.e_atkSpd = 1;
 		break;
 	}
 }
@@ -228,14 +228,14 @@ void dungeonProgress() {
 		"[2] Free Loot\n" << endl <<
 		"======================================" << endl;
 
-	cin >> cmd; 
+	cin >> cmd;
 	system("cls");
 
 	switch (cmd) {
-	case 1: 
+	case 1:
 		p_exp += expUpAlg(p_level) - p_exp;
 		break;
-	case 2: 
+	case 2:
 		break;
 	}
 }
@@ -265,10 +265,10 @@ void characterInitialize() {
 		switch (cmd)
 		{
 		case 1: //Human player
-			cout << "==========================================================\n" << endl;
+			cout << "=========================================================\n" << endl;
 			cout << "Humans have a base health of " << characterTypeHP[cmd - 1] << "..." << endl;
-			cout << "They use normal attacks and have an attack at a speed of " << 1 << endl << endl;
-			cout << "==========================================================\n" << endl;
+			cout << "They use basic attacks and have an attack at a speed of " << 1 << endl << endl;
+			cout << "=========================================================\n" << endl;
 			system("pause");
 			system("cls");
 			confirmCharacter(cmd - 1, characterSpecies, characterTypeHP, characterAtkSpd);
@@ -364,7 +364,7 @@ void specUp() {
 		"[5] Agility (Impacts Dodge Chance)\n" << endl <<
 		"Input value of your decision: " << endl;
 
-	cin >> cmd; 
+	cin >> cmd;
 	system("cls");
 
 	switch (cmd)
@@ -388,7 +388,7 @@ void specUp() {
 }
 
 void tryAgain() {
-	char ch; 
+	char ch;
 	cout << "==========Game Over==========\n" << endl <<
 		"Would you like to try again? (Y/N)\n" << endl <<
 		"=============================\n" << endl <<
@@ -397,7 +397,7 @@ void tryAgain() {
 	cin >> ch;
 	system("cls");
 
-	((ch == 'Y') || (ch == 'y')) ? runChoice = true : runChoice = false; 
+	((ch == 'Y') || (ch == 'y')) ? runChoice = true : runChoice = false;
 }
 
 int rnd(double n) {  //Simple round function with integer double addition
