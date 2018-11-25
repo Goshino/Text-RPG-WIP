@@ -70,7 +70,6 @@ Enemy enemyCreate(); //Enemy struct that randomly generates an enemy
 
 void combat(Enemy mob);
 void attack(Enemy mob, int p_atkChoice);
-bool checkState(Enemy mob);
 void enemyDiceRoll(Enemy& mob);
 bool doesPlayerWin(Enemy mob, int p_atkChoice);
 void combatNotif();
@@ -299,16 +298,6 @@ void combat(Enemy mob) {
 	else {
 		endOfCombat;
 	}	
-}
-
-bool checkState(Enemy mob) {
-	if (mob.e_hp == 0) {
-		return false;
-	}
-	if (p_hp == 0) {
-		return false;
-	}
-	return true;
 }
 
 void attack(Enemy mob, int p_atkChoice) {
