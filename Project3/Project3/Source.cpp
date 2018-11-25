@@ -70,6 +70,7 @@ Enemy enemyCreate(); //Enemy struct that randomly generates an enemy
 
 void combat(Enemy mob);
 void attack(Enemy mob, int p_atkChoice);
+bool checkHP(Enemy mob);
 void enemyDiceRoll(Enemy& mob);
 bool doesPlayerWin(Enemy mob, int p_atkChoice);
 void combatNotif();
@@ -104,9 +105,6 @@ void main() {
 
 	do {
 		beginningMenu();
-		if (!p_isAlive) {
-			tryAgain();
-		}
 	} while (running && runChoice);
 
 	system("pause");
@@ -134,7 +132,7 @@ Enemy enemyCreate() {
 		temp.e_atkSpd = 0.5;
 		break;
 	case 2: //Slimes
-		temp.e_species = "Slimes";
+		temp.e_species = "Slime";
 		temp.e_hp = temp.e_hpMax = rnd(sqrt(temp.e_level) * 10 + (temp.e_level / 2));
 		temp.e_atk = rnd(sqrt(temp.e_level * 10) * 2);
 		temp.e_favoriteAtk = 0; //counter
@@ -239,7 +237,7 @@ void beginningMenu() { //beginingMenu function allows the user to begin his or h
 }
 
 void combat(Enemy mob) {
-	do {
+	while(checkHP(mob)) {
 		cout << "======================Combat======================\n" << endl;
 		cout << setw(5) << left << "Player" << setw(30) << right << "Enemy" << endl;
 		cout << setw(5) << left << "Level: " << p_level << setw(30) << right << "Level: " << mob.e_level << endl;
@@ -289,21 +287,14 @@ void combat(Enemy mob) {
 
 		system("pause");
 		system("cls");
-	} while ((p_hp > 0) && (mob.e_hp > 0) && (running));
-
-
-	if (p_hp == 0) {
-		tryAgain();
-	}
-	else {
-		endOfCombat;
-	}	
+	} 
+	endOfCombat(mob);
 }
 
 void attack(Enemy mob, int p_atkChoice) {
 	int p_damage = p_atk * p_atk / (p_atk + mob.e_armr);
 	int e_damage = mob.e_atk * mob.e_atk / (mob.e_atk + p_armr);
-	do {
+	while(checkHP(mob)) {
 		enemyDiceRoll(mob);
 
 		if (doesPlayerWin(mob, p_atkChoice)) {
@@ -361,7 +352,17 @@ void attack(Enemy mob, int p_atkChoice) {
 		system("cls");
 
 		combat(mob);
-	} while ((p_hp > 0) && (mob.e_hp > 0));
+	} 
+}
+
+bool checkHP(Enemy mob) {
+	if (p_hp <= 0) {
+		return false;
+	}
+	if (mob.e_hp <= 0) {
+		return false;
+	}
+	return true;
 }
 
 void enemyDiceRoll(Enemy& mob) {
@@ -413,8 +414,13 @@ void combatNotif() {
 }
 
 void endOfCombat(Enemy mob) {
-	cout << "Congratulations!\n" << endl <<
-		"You have successfully slain a " << mob.e_species << endl << endl;
+	if (mob.e_hp <= 0) {
+		cout << "Congratulations!\n" << endl <<
+			"You have successfully slain a " << mob.e_species << endl << endl;
+	}
+	if (p_hp <= 0) {
+		tryAgain();
+	}
 }
 
 void printEnemyStats(Enemy mob) {
@@ -663,6 +669,9 @@ void tryAgain() {
 	system("cls");
 
 	((ch == 'Y') || (ch == 'y')) ? runChoice = true : runChoice = false;
+	if (!runChoice) {
+		exit(0);
+	}
 }
 
 int rnd(double n) {  //Simple round function with integer double addition
