@@ -1128,8 +1128,8 @@ void tryAgain() { //This function is called if the player falls to fatal hp (0)
 
 	((ch == 'Y') || (ch == 'y')) ? runChoice = true : runChoice = false; //If player chooses to continue, call the function bellow
 	if (runChoice) {
-		beginningMenu();
 		resetStats();
+		beginningMenu();
 	}
 	else { //Else stop
 		exit(0);
